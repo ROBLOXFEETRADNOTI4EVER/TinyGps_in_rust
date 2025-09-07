@@ -1,7 +1,12 @@
+// Need to add to it so it refreshes itself the esp32 in case of not recing data for 5 secounds it will just start redoing 
+
+
 #![no_std]
 #![no_main]
 
-use defmt::info;
+
+
+use defmt::{info, println};
 use embedded_io_async::{Read, Write};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
@@ -26,28 +31,79 @@ const _GPS_KM_PER_METER: f32 =  0.001;
 
 struct TinyGPS<UART> {
     uart: UART,
+     bufff : Vec<char,256>,
 }
 
 impl<UART> TinyGPS<UART>
 where 
     UART: Read + Write,
 {
-   async  fn encode(&mut self, c: u8) -> bool {
-        
-    // call every single one and return with option true or false with the f64 and then match statment for each
     
+   async  fn encode(&mut self, c: u8) -> bool {
+
+    // call every single one and return with option true or false with the f64 and then match statment for each
+        let mut  valid_sentence = false;
+        // valid_sentence = true;
+        // valid_sentence
+        // println!("{}",c);
+      
+    if c == b'$'{
+        Timer::after(Duration::from_millis(5)).await;
+        if self.bufff[1] == 'G' && self.bufff[2] == 'Q' && self.bufff[3] == 'G' && self.bufff[4] == 'S' && self.bufff[5] == 'V' {
+            info!(" \n 0 QZSS SATALITES VISIBLE\n");
+            return  false;
+        } else if self.bufff[1] == 'G' && self.bufff[2] == 'A' && self.bufff[3] == 'G' && self.bufff[4] == 'S' && self.bufff[5] == 'V'  {
+            info!(" \n 0 Galileo SATALITES VISIBLE\n");
+            return  false;
+        } else if self.bufff[1] == 'G' && self.bufff[2] == 'P' && self.bufff[3] == 'G' && self.bufff[4] == 'S' && self.bufff[5] == 'V'  {
+            info!(" \n 1 GPS  SATALITE VISIBLE\n");
+            // return  false;
+        }else if self.bufff[1] == 'G' && self.bufff[2] == 'N' && self.bufff[3] == 'G' && self.bufff[4] == 'L' && self.bufff[5] == 'L'  {
+            info!(" \n Empty Lat/Lon \n");
+            return  false;
+        }
+        self.bufff.clear();
+    }
+
+    if c == b'\n'{
+
+        info!("COMPLETED GPS SENTENCE");
+        info!("BUFFER IS {}", self.bufff);
+    }
+    
+    
+    match self.bufff.push(c as char){
+        Ok(()) =>{
+            info!("whole buffer is {}" ,self.bufff);
+        }
+        Err(e) =>{
+            info!("AN error accoured with this char ->  {} buffer might be full", e);
+            info!(" buffer size -> {}",self.bufff.len());
+            self.bufff.clear();
+
+        }
+    }
+  
+
+
+  
+
+        valid_sentence
      }
     
      async  fn latitude(&self) -> Option<f64>{
-
+        Some(33.3)
      }
      async  fn longitude(&self) -> Option<f64>{
+        Some(33.3)
 
      }
      async  fn altitude(&self) -> Option<f64>{
+        Some(33.3)
 
      }
      async  fn speed(&self) -> Option<f64>{
+        Some(33.3)
 
      }
     async fn update(&mut self) -> Result<bool, UART::Error> {
@@ -89,7 +145,8 @@ let uart = Uart::new(peripherals.UART2, uart_config).unwrap()
     .with_tx(peripherals.GPIO33)
     .into_async();
 
-let mut gps = TinyGPS { uart };
+let mut bufff: Vec<_, 256> = Vec::new();
+let mut gps = TinyGPS { uart, bufff };
     // TODO: Spawn some tasks
     let _ = spawner;
 
@@ -97,6 +154,7 @@ let mut gps = TinyGPS { uart };
         match gps.update().await {
             Ok(true) => {
          // reading gps data
+            
             }
             Ok(false) => {
             
