@@ -4,5 +4,6 @@ Gps Code for embeded rust esp32 Embassy framework
 
 To Do 
 Parse Gps Data  
-Make a Func so it will get only lat/long and time
-and also function to get whole gps data parsed
+Func that returns a gps Lat lon data (also functions to return bits of the gps data)
+Parser that returns gps data
+
