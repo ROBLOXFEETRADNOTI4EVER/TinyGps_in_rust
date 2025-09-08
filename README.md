@@ -22,8 +22,8 @@ Baud rate is 38400 but you can change it if your module is different
 
 - reads nmea sentences over uart
 - parses lat/lon from GNGLL sentences  
-- gets altitude from GPGGA sentences
-- gets speed from GPRMC sentences
+-# gets altitude from GPGGA sentences   # Not DONE
+- gets speed from GPRMC sentences       # Not Working
 - checksum validation so you know data isnt corrupted
 - async uart reading with embassy framework
 
