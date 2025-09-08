@@ -376,7 +376,7 @@ async fn speed(&self) -> Option<f64> {
         return None;
     }
     
-    if !(self.bufff[1] == 'G' && self.bufff[2] == 'P' && self.bufff[3] == 'R' && self.bufff[4] == 'M' && self.bufff[5] == 'C') {
+    if !(self.bufff[1] == 'G' && self.bufff[2] == 'N' && self.bufff[3] == 'R' && self.bufff[4] == 'M' && self.bufff[5] == 'C') {
         return None;
     }
     
@@ -412,6 +412,9 @@ async fn speed(&self) -> Option<f64> {
     
     let speed_knots: f64 = speed_str.parse().ok()?;
     let speed_kmph = speed_knots * 1.852;
+    if speed_kmph < 50.0  || speed_kmph > 180.{
+        return Some(0.0);  
+    }
     Some(speed_kmph)
 }
 
@@ -468,10 +471,24 @@ let mut gps = TinyGPS { uart, bufff };
     loop {
         match gps.update().await {
             Ok(true) => {
-         // reading gps data
                 match gps.latitude_longitude().await {
                     Some(bob ) =>{
                         info!("Longitude and latitude is {}  longitude {} ",bob.0, bob.1);
+                    }None =>{
+                    }
+                    
+                }
+                match gps.altitude().await {
+                    Some(bob ) =>{
+                        info!("altitude is ->{} ",bob);
+                    }None =>{
+                    }
+                    
+                }
+
+                match gps.speed().await {
+                    Some(bob ) =>{
+                        info!("Speed is ->{} MIGHT NOT BE ACCAURATE INDOORS ",bob);
                     }None =>{
                     }
                     
@@ -484,7 +501,7 @@ let mut gps = TinyGPS { uart, bufff };
                 
             }
         }
-        Timer::after_millis(10).await; 
+        Timer::after_millis(5).await; 
     }
 
 }
